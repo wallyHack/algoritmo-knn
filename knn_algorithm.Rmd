@@ -1,0 +1,320 @@
+---
+title: "knn_algorithm"
+author: "Manuel Herrera Lara y Anahí Berumen Murillo"
+date: "3/11/2020"
+output: pdf_document
+---
+
+## Perform a basic data analysis describing the dataset, summary statistics, data distribution, etc.
+### The data domain
+With this dataset we try to predict survival of patients with heart failure applying the algorithm knn.
+Cardiovascular diseases kill approximately 17 million people globally every year, and they mainly exhibit as myocardial infarctions and heart failures. Heart failure (HF) occurs when the heart cannot pump enough blood to meet the needs of the body. Available electronic medical records of patients quantify symptoms, body features, and clinical laboratory test values, which can be used to perform biostatistics analysis aimed at highlighting patterns and correlations otherwise undetectable by medical doctors. Machine learning, in particular, with classification algorithms like knn can predict patients survival from their data and can individuate the most important features among those included in their medical records.
+![HeartFailure](/home/chino/Documentos/17_materias_IS/1_mineria_de_datos/9_semana_miniproyecto2/insuficiencia_cardiaca.jpg)
+
+Cardiovascular diseases are disorders of the heart and blood vessels, including coronary heart disease (heart attacks), cerebrovascular diseases (strokes), heart failure (HF), and other types of pathology. In particular, heart failure occurs when the heart is unable to pump enough blood to the body, and it is usually caused by diabetes, high blood pressure, or other heart conditions or diseases.
+
+
+\newpage
+### Algorithm KNN
+- KNN application
+: - Classify data based on similarity to its neighbors
+: - simple and effective
+: - has a quick training phase
+: - KNN uses information from the nearest neighbors against the new observations that have just arrived.
+: - k. Number of neighbors.
+: - It is based on the calculation of distances, that is, it calculates the distances between a point and its neighbors.
+: - There are different metrics for measuring distances between objects, the most common being the Euclidean distance.
+
+## How the data was recollected, limitations of the study, disadvantages, etc.
+To diagnose heart failure, your doctor will carefully review your medical history and symptoms, and do a physical exam. Your doctor can also check for risk factors, such as high blood pressure, coronary artery disease, or diabetes.
+ This dataset contains the medical records of 299 patients who had heart failure, collected during their follow-up period, where each patient profile has 13 clinical features.
+ The current version of the dataset was elaborated by Davide Chicco (Krembil Research Institute, Toronto, Canada) and donated to the University of California Irvine Machine Learning Repository.
+
+## Description of the variables of the dataset
+![](/home/chino/Documentos/17_materias_IS/1_mineria_de_datos/9_semana_miniproyecto2/variables_dataset.png)
+\newpage
+## >> (dataset reading)
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+# path of the dataset
+setwd("/home/chino/Documentos/17_materias_IS/1_mineria_de_datos/9_semana_miniproyecto2/")
+
+# read the dataset
+pacientes_heart_failure <- read.csv("heart_failure_clinical_records_dataset.csv", stringsAsFactors = FALSE)
+```
+
+## Basic summary statics
+- It shows the first 10 records of the dataset.
+```{r, include=TRUE}
+head(pacientes_heart_failure, 10)
+```
+
+
+\newpage
+-  It shows the structure of the data and/or the data types of the attributes.\
+```{r, include=TRUE}
+str(pacientes_heart_failure)
+```
+
+- summary with basic statistical measures.\
+```{r, include=TRUE}
+summary(pacientes_heart_failure)
+```
+
+\newpage
+##  Describe the distribution of the data.
+### Exploring the Variables
+#### Anemia patients
+```{r, include=TRUE}
+table(pacientes_heart_failure$anaemia)
+```
+
+#### Percentage of patients with anemia
+```{r, include=TRUE}
+anaemia_table <- table(pacientes_heart_failure$anaemia)
+anaemia_pct <- prop.table(anaemia_table) * 100
+round(anaemia_pct, digits = 1)
+```
+
+#### Diabetes patients
+```{r, include=TRUE}
+table(pacientes_heart_failure$diabetes)
+```
+
+#### Percentage of patients with diabetes
+```{r, include=TRUE}
+diabetes_table <- table(pacientes_heart_failure$diabetes)
+diabetes_pct <- prop.table(diabetes_table) * 100
+round(diabetes_pct, digits = 1)
+```
+
+\newpage
+#### Patients with high blood pressure
+```{r, include=TRUE}
+table(pacientes_heart_failure$high_blood_pressure)
+```
+
+#### Percentage of patients with high blood pressure
+```{r, include=TRUE}
+hbp_table <- table(pacientes_heart_failure$high_blood_pressure)
+hbp_pct <- prop.table(hbp_table) * 100
+round(hbp_pct, digits = 1)
+```
+
+#### Sex
+```{r, include=TRUE}
+table(pacientes_heart_failure$sex)
+```
+
+#### Percentage of sex
+```{r, include=TRUE}
+sex_table <- table(pacientes_heart_failure$sex)
+sex_pct <- prop.table(sex_table) * 100
+round(sex_pct, digits = 1)
+```
+
+\newpage
+#### Smoking patients
+```{r, include=TRUE}
+table(pacientes_heart_failure$smoking)
+```
+
+#### Percentage of smoking patients
+```{r, include=TRUE}
+smoking_table <- table(pacientes_heart_failure$smoking)
+smoking_pct <- prop.table(smoking_table) * 100
+round(smoking_pct, digits = 1)
+```
+#### Patient survival during the follow-up period
+```{r, include=TRUE}
+table(pacientes_heart_failure$DEATH_EVENT)
+```
+
+#### Percentage of patient survival during the follow-up period
+```{r, include=TRUE}
+death_event_table <- table(pacientes_heart_failure$DEATH_EVENT)
+death_event_pct <- prop.table(death_event_table) * 100
+round(death_event_pct, digits = 1)
+```
+
+\newpage
+## Boxplots - Interpretation
+We can see that the average and median age is 60 years and that there are no outliers.
+```{r, include=TRUE}
+boxplot(pacientes_heart_failure$age, main = "Patients Age Boxplot", ylab ="Age")
+```
+
+We can see that the period is averaged over 130 days and that there are no outliers.
+```{r, include=TRUE}
+boxplot(pacientes_heart_failure$time, main = "Patients Follow-up period Boxplot", ylab ="time")
+```
+
+\newpage
+## Histograms-Interpretation
+As seen in the graph, the majority of the patients are approximately 60 years old.
+And it is a **non-symmetric distribution** since it is skewed to the right, because the mean age is greater than the median.
+```{r, include=TRUE}
+hist(pacientes_heart_failure$age, main = "Patients Age Histogram", xlab = "Age", ylab = "Patients")
+```
+
+\newpage
+As we can see in the graph, most of the patients are men.
+```{r, include=TRUE}
+hist(pacientes_heart_failure$sex, main = "Patients Sex Histogram", xlab = "Sex", ylab = "Patients")
+```
+\newpage
+As we can see in the graph, most of the patients do not have anemia.
+```{r, include=TRUE}
+hist(pacientes_heart_failure$anaemia, main = "Patients Anaemia Histogram", xlab = "Anaemia", ylab = "Patients")
+```
+
+\newpage
+As we can see in the graph, most of the patients do not have diabetes.
+```{r, include=TRUE}
+hist(pacientes_heart_failure$diabetes, main = "Patients Diabetes Histogram", xlab = "Diabetes", ylab = "Patients")
+```
+
+\newpage
+As we can see in the graph, most of the patients do not smoke.
+```{r, include=TRUE}
+hist(pacientes_heart_failure$smoking, main = "Patients Smoking Histogram", xlab = "Smoking", ylab = "Patients")
+```
+
+\newpage
+## - Applying knn to predict survival of patients with heart failure
+![](/home/chino/Documentos/17_materias_IS/1_mineria_de_datos/9_semana_miniproyecto2/distancia_euclidiana.png)
+
+```{r, include=TRUE}
+### necessary library
+# install.packages("class")
+# install.packages("gmodels")
+# library(class)
+# library(gmodels)
+```
+
+
+## step 1.- Loading dataset
+```{r, include=TRUE}
+# path of the dataset
+setwd("/home/chino/Documentos/17_materias_IS/1_mineria_de_datos/9_semana_miniproyecto2/")
+
+# read the dataset
+pacientes_heart_failure <- read.csv("heart_failure_clinical_records_dataset.csv", stringsAsFactors = FALSE)
+```
+
+## step 2.- Check the structure the dataset
+```{r, include=TRUE}
+str(pacientes_heart_failure)
+```
+\newpage
+## PREPROCESING
+### - We exclude the id
+```{r, include=TRUE}
+# not applicable because the dataset has no id
+# pacientes_heart_failure <- pacientes_heart_failure[-1]
+```
+
+### - Variable that we are going to predict >> DEATH_EVENT
+```{r, include=TRUE}
+table(pacientes_heart_failure$DEATH_EVENT)
+```
+
+### - Transform to factor the categorical variable that we are going to predict >> DEATH_EVENT
+```{r, include=TRUE}
+pacientes_heart_failure$DEATH_EVENT <- factor(pacientes_heart_failure$DEATH_EVENT,
+                                              levels = c("0", "1"),
+                                              labels = c("No", "Si"))
+```
+
+
+### - Table of proportions
+```{r, include=TRUE}
+round(prop.table(table(pacientes_heart_failure$DEATH_EVENT)) * 100, digits = 1)
+```
+
+### - Summary of the main variables
+```{r, include=TRUE}
+summary(pacientes_heart_failure[c("age", "time", "serum_creatinine", "serum_sodium", "anaemia", "diabetes", "high_blood_pressure", "smoking")])
+```
+### - Normalizing Min-Max numeric data
+![](/home/chino/Documentos/17_materias_IS/1_mineria_de_datos/9_semana_miniproyecto2/normalizazión-Min-Max.png)
+
+```{r, include=TRUE}
+normalize <- function(x){
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+```
+
+### - We apply the normalize function to all the columns of the dataset
+```{r, include=TRUE}
+pacientes_heart_failure_n <- as.data.frame(lapply(pacientes_heart_failure[1:12], normalize))
+summary(pacientes_heart_failure_n)
+```
+
+## PROCESSING AND RESULTS
+### - We divide the normalized dataset into training data and test data
+### 70% for training
+### 30% for test
+```{r, include=TRUE}
+pacientes_heart_failure_train <- pacientes_heart_failure_n[ 1: 209, ]
+pacientes_heart_failure_test <- pacientes_heart_failure_n[ 210: 299, ]
+
+```
+
+### - We observe the dimensions of the dataset
+```{r, include=TRUE}
+dim(pacientes_heart_failure_train)
+dim(pacientes_heart_failure_test)
+```
+### - We extract the labels or the variable we are trying to predict (Dependent Variable)
+```{r, include=TRUE}
+# we extract the column DEATH_EVENT
+pacientes_heart_failure_train_labels <- pacientes_heart_failure[ 1:209, 13] 
+pacientes_heart_failure_test_labels <- pacientes_heart_failure[ 210:299, 13]
+```
+
+## step 3.- Training a model on data
+```{r, include=TRUE}
+library(class)
+# test prediction
+# Nota: pasar solo las etiquetas de los datos de entrenamiento
+pacientes_hf_test_pred <- knn(train = pacientes_heart_failure_train,
+                              test = pacientes_heart_failure_test,
+                              cl = pacientes_heart_failure_train_labels,
+                              k = 9)
+```
+
+\newpage
+## step 4.- Evaluating model performance
+### - We compare reality (Test labels) against predictions
+```{r, include=TRUE}
+library(gmodels)
+ CrossTable(x = pacientes_heart_failure_test_labels,
+            y = pacientes_hf_test_pred,
+            prop.chisq = FALSE)
+```
+
+\newpage
+```{r, include=TRUE}
+table(pacientes_heart_failure_test_labels, pacientes_hf_test_pred)
+```
+## step 5.- Improving model performance
+### - Using Transforming-z core normalization
+![](/home/chino/Documentos/17_materias_IS/1_mineria_de_datos/9_semana_miniproyecto2/z-core Normalizacion.png)
+```{r, include=TRUE}
+# [-13] omite la columna DEATH_EVENT en la normalización
+pacientes_hf_z <- as.data.frame(scale(pacientes_heart_failure[-13]))
+summary(pacientes_hf_z) # normaliza en desviaciones standard
+```
+```{r, include=TRUE}
+pacientes_hf_train <- pacientes_hf_z[ 1: 209, ]
+pacientes_hf_test <- pacientes_hf_z[ 210: 299, ]
+pacientes_hf_train_labels <- pacientes_heart_failure[ 1: 209, 13]
+pacientes_hf_test_labels <- pacientes_heart_failure[ 210: 299, 13]
+pacientesHF_test_pred <- knn(train = pacientes_hf_train,
+                             test = pacientes_hf_test,
+                             cl = pacientes_hf_train_labels,
+                             k = 9)
+CrossTable(x = pacientes_hf_test_labels, y = pacientesHF_test_pred, prop.chisq = FALSE)
+```
+
